@@ -18,7 +18,10 @@ import argparse
 import os
 import sys
 from pathlib import Path
+from typing import Callable, Sequence
+
 import faiss
+import numpy as np
 import torch
 import torchvision.transforms as T
 from PIL import Image
@@ -74,7 +77,14 @@ class VPRModel(nn.Module):
 class LoopDetector:
     """Loop detector class for detecting loop closures in image sequences"""
 
-    def __init__(self, image_dir, output="loop_closures.txt", config=None):
+    def __init__(
+        self,
+        image_dir,
+        output="loop_closures.txt",
+        config=None,
+        image_paths: Sequence[str] | None = None,
+        image_loader: Callable[[str], Image.Image | np.ndarray] | None = None,
+    ):
         """Initialize the loop detector
 
         Args:
@@ -102,6 +112,8 @@ class LoopDetector:
         self.model = None
         self.device = None
         self.image_paths = None
+        self.image_paths_override = list(image_paths) if image_paths is not None else None
+        self.image_loader = image_loader
         self.descriptors = None
         self.loop_closures = None
 
@@ -150,6 +162,10 @@ class LoopDetector:
 
     def get_image_paths(self):
         """Get paths of all image files in directory"""
+        if self.image_paths_override is not None:
+            self.image_paths = list(self.image_paths_override)
+            return self.image_paths
+
         image_extensions = [".jpg", ".jpeg", ".png"]
         image_paths = []
 
@@ -160,6 +176,24 @@ class LoopDetector:
         image_paths = sorted(image_paths)
         self.image_paths = image_paths
         return image_paths
+
+    def _load_image(self, path: str | Path) -> Image.Image:
+        if self.image_loader is None:
+            return Image.open(path).convert("RGB")
+
+        loaded = self.image_loader(str(path))
+        if isinstance(loaded, Image.Image):
+            return loaded.convert("RGB")
+        if isinstance(loaded, np.ndarray):
+            arr = np.asarray(loaded)
+            if arr.dtype != np.uint8:
+                arr = np.clip(arr, 0, 255).astype(np.uint8)
+            return Image.fromarray(arr).convert("RGB")
+        if isinstance(loaded, (str, Path)):
+            return Image.open(loaded).convert("RGB")
+        raise TypeError(
+            f"Unsupported image_loader output for {path}: {type(loaded).__name__}"
+        )
 
     def extract_descriptors(self):
         """Extract image feature descriptors"""
@@ -180,7 +214,7 @@ class LoopDetector:
 
             for path in batch_paths:
                 try:
-                    img = Image.open(path).convert("RGB")
+                    img = self._load_image(path)
                     img = transform(img)
                     batch_imgs.append(img)
                 except Exception as e:
