@@ -34,3 +34,4 @@ src/debug_main.py
 temp*.png
 outputs
 logs/
+*.ckpt

@@ -25,6 +25,12 @@ This document provides comprehensive instructions for running benchmark evaluati
 
 ## 🚀 Quick Start
 
+### 0. Install Benchmark Dependencies
+
+```bash
+pip install -e ".[benchmark]"
+```
+
 ### 1. Download Benchmark Data
 
 > 💡 **Note:** Install HuggingFace CLI first: `pip install -U huggingface_hub[cli]`
