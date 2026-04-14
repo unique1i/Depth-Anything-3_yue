@@ -368,6 +368,9 @@ class NestedDepthAnything3Net(nn.Module):
         output = self._apply_metric_scaling(output, metric_output)
         output = self._apply_depth_alignment(output, metric_output)
         output = self._handle_sky_regions(output, metric_output)
+        # Expose sky mask (same threshold as metric alignment path) for downstream filtering/export.
+        if "sky" in metric_output:
+            output.sky = metric_output.sky > 0.3
 
         return output
 
