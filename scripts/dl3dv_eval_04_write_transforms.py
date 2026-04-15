@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate transforms_da3.json for completed DL3DV evaluation scenes.
+"""Step 04: write transforms_da3.json for completed DL3DV evaluation scenes.
 
 This script copies DA3 camera poses directly from `camera_poses.txt`.
 It does not support any SIM(3) alignment against an existing transforms JSON.
@@ -28,8 +28,8 @@ for p in (str(SRC_ROOT), str(DA3_STREAMING_ROOT)):
 
 
 DEFAULT_SPLIT_FILE = "/home/yli7/scratch2/datasets/dl3dv_960p/metadata/splits/dl3dv_evaluation_filtered.txt"
-DEFAULT_OUTPUT_ROOT = "/home/yli7/scratch/datasets/dl3dv_960p/evaluation/da3_streaming"
-DEFAULT_ZIP_ROOT = "/home/yli7/scratch/datasets/dl3dv_960p/evaluation/images"
+DEFAULT_OUTPUT_ROOT = "/home/yli7/scratch2/datasets/dl3dv_960p/evaluation"
+DEFAULT_ZIP_ROOT = "/home/yli7/scratch2/datasets/dl3dv_960p/evaluation/images"
 DEFAULT_SCENE_OUTPUT_SUBDIR = "da3_streaming_output"
 EXPECTED_SOURCE_IMAGE_TREE = "nerfstudio/images_4"
 FLOAT_PATTERN = re.compile(r"[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?")
@@ -51,6 +51,25 @@ def _read_split_lines(path: Path) -> list[str]:
                 line = line[:-4]
             scenes.append(line.lstrip("/"))
     return scenes
+
+
+def _normalize_scene_id(raw: str) -> str:
+    line = raw.strip()
+    if not line or line.startswith("#"):
+        return ""
+    if line.endswith(".zip"):
+        line = line[:-4]
+    return Path(line.lstrip("/")).name
+
+
+def _read_scene_id_allowlist(path: Path) -> set[str]:
+    scene_ids: set[str] = set()
+    with path.open("r", encoding="utf-8") as f:
+        for raw in f:
+            scene_id = _normalize_scene_id(raw)
+            if scene_id:
+                scene_ids.add(scene_id)
+    return scene_ids
 
 
 def _load_json(path: Path) -> dict:
@@ -285,7 +304,7 @@ def _build_transforms_da3_payload(
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Write transforms_da3.json for completed DL3DV evaluation scenes by directly "
+            "Step 04: write transforms_da3.json for completed DL3DV evaluation scenes by directly "
             "copying DA3 camera_poses.txt. No --align_to_da3_pose / SIM(3) alignment mode is supported."
         )
     )
@@ -293,6 +312,14 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output-root", default=DEFAULT_OUTPUT_ROOT)
     parser.add_argument("--zip-root", default=DEFAULT_ZIP_ROOT)
     parser.add_argument("--scene-output-subdir", default=DEFAULT_SCENE_OUTPUT_SUBDIR)
+    parser.add_argument(
+        "--scene-ids-file",
+        default=None,
+        help=(
+            "Optional allowlist file with one scene identifier or scene path per line. "
+            "Only scene IDs that appear both here and in the split file will get transforms_da3.json."
+        ),
+    )
     parser.add_argument("--start-idx", type=int, default=0)
     parser.add_argument("--end-idx", type=int, default=None)
     parser.add_argument("--skip-existing", action="store_true")
@@ -308,6 +335,7 @@ def main() -> int:
     output_root = Path(args.output_root).expanduser().resolve()
     zip_root = Path(args.zip_root).expanduser().resolve()
     scene_output_subdir = str(args.scene_output_subdir)
+    scene_ids_file = Path(args.scene_ids_file).expanduser().resolve() if args.scene_ids_file else None
 
     if not split_file.exists():
         raise FileNotFoundError(f"Split file not found: {split_file}")
@@ -315,8 +343,19 @@ def main() -> int:
         raise FileNotFoundError(f"Output root not found: {output_root}")
     if not zip_root.exists():
         raise FileNotFoundError(f"Zip root not found: {zip_root}")
+    if scene_ids_file is not None and not scene_ids_file.exists():
+        raise FileNotFoundError(f"Scene IDs file not found: {scene_ids_file}")
 
     scene_entries = _read_split_lines(split_file)
+    allowed_scene_ids = None
+    if scene_ids_file is not None:
+        raw_allowed_scene_ids = _read_scene_id_allowlist(scene_ids_file)
+        split_scene_ids = {_scene_id_from_split_entry(entry) for entry in scene_entries}
+        allowed_scene_ids = raw_allowed_scene_ids & split_scene_ids
+        print(
+            "Loaded scene allowlist: "
+            f"{len(raw_allowed_scene_ids)} raw entries, {len(allowed_scene_ids)} matched split scenes"
+        )
     total = len(scene_entries)
     start = max(0, int(args.start_idx))
     end = total if args.end_idx is None else min(total, int(args.end_idx))
@@ -334,6 +373,11 @@ def main() -> int:
         scene_id = _scene_id_from_split_entry(scene_entry)
         scene_root = output_root / scene_id
         print(f"\n[{idx}] scene={scene_id}")
+
+        if allowed_scene_ids is not None and scene_id not in allowed_scene_ids:
+            skipped += 1
+            print("Scene skipped: not present in --scene-ids-file allowlist")
+            continue
 
         manifest_path = scene_root / "scene_manifest.json"
         if not manifest_path.exists():

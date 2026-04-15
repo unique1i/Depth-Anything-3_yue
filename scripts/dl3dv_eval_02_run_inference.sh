@@ -6,8 +6,9 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 PYTHON_BIN="${PYTHON_BIN:-/home/yli7/local/micromamba/envs/da3/bin/python}"
 CONFIG_PATH="${CONFIG_PATH:-${REPO_ROOT}/da3_streaming/configs/base_config.yaml}"
-ZIP_ROOT="${ZIP_ROOT:-/home/yli7/scratch/datasets/dl3dv_960p/evaluation/images}"
-OUTPUT_ROOT="${OUTPUT_ROOT:-/home/yli7/scratch/datasets/dl3dv_960p/evaluation/da3_streaming_gs}"
+SPLIT_FILE="${SPLIT_FILE:-/home/yli7/scratch2/datasets/dl3dv_960p/metadata/splits/dl3dv_evaluation_filtered.txt}"
+ZIP_ROOT="${ZIP_ROOT:-/home/yli7/scratch2/datasets/dl3dv_960p/evaluation/images}"
+OUTPUT_ROOT="${OUTPUT_ROOT:-/home/yli7/scratch2/datasets/dl3dv_960p/evaluation}"
 DEVICE="${DEVICE:-cuda}"
 PROCESS_RES="${PROCESS_RES:-546}"
 SCENE_OUTPUT_SUBDIR="${SCENE_OUTPUT_SUBDIR:-da3_streaming_output}"
@@ -25,12 +26,15 @@ EXTRA_ARGS=()
 
 usage() {
   cat <<'EOF'
+Step 02: run DL3DV eval inference for a split range.
+
 Usage:
-  scripts/run_da3_streaming_dl3dv_eval.sh [options] [-- extra_runner_args...]
+  scripts/dl3dv_eval_02_run_inference.sh [options] [-- extra_runner_args...]
 
 Options:
   --python-bin PATH
   --config PATH
+  --split-file PATH
   --zip-root PATH
   --output-root PATH
   --device NAME
@@ -48,7 +52,7 @@ Options:
   --fail-fast / --no-fail-fast
 
 Examples:
-  scripts/run_da3_streaming_dl3dv_eval.sh --start-idx 0 --end-idx 1
+  scripts/dl3dv_eval_02_run_inference.sh --start-idx 0 --end-idx 1
 EOF
 }
 
@@ -56,6 +60,7 @@ while (($# > 0)); do
   case "$1" in
     --python-bin) PYTHON_BIN="$2"; shift 2 ;;
     --config) CONFIG_PATH="$2"; shift 2 ;;
+    --split-file) SPLIT_FILE="$2"; shift 2 ;;
     --zip-root) ZIP_ROOT="$2"; shift 2 ;;
     --output-root) OUTPUT_ROOT="$2"; shift 2 ;;
     --device) DEVICE="$2"; shift 2 ;;
@@ -92,6 +97,10 @@ if [[ ! -f "${CONFIG_PATH}" ]]; then
   echo "Config not found: ${CONFIG_PATH}" >&2
   exit 2
 fi
+if [[ ! -f "${SPLIT_FILE}" ]]; then
+  echo "Split file not found: ${SPLIT_FILE}" >&2
+  exit 2
+fi
 if [[ ! -d "${ZIP_ROOT}" ]]; then
   echo "Zip root not found: ${ZIP_ROOT}" >&2
   exit 2
@@ -114,8 +123,9 @@ if ! [[ "${MAX_FRAMES_PER_SCENE}" =~ ^-?[0-9]+$ ]] || (( MAX_FRAMES_PER_SCENE ==
 fi
 
 cmd=(
-  "${PYTHON_BIN}" "${REPO_ROOT}/scripts/da3_streaming_dl3dv_eval.py"
+  "${PYTHON_BIN}" "${REPO_ROOT}/scripts/dl3dv_eval_02_streaming_inference.py"
   --config "${CONFIG_PATH}"
+  --split-file "${SPLIT_FILE}"
   --zip-root "${ZIP_ROOT}"
   --output-root "${OUTPUT_ROOT}"
   --device "${DEVICE}"

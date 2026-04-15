@@ -6,7 +6,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON_BIN="${PYTHON_BIN:-/home/yli7/local/micromamba/envs/da3/bin/python}"
 CONFIG_PATH="${CONFIG_PATH:-${REPO_ROOT}/da3_streaming/configs/base_config.yaml}"
 SPLIT_FILE="${SPLIT_FILE:-/home/yli7/scratch2/datasets/dl3dv_960p/metadata/splits/dl3dv_evaluation_filtered.txt}"
-OUTPUT_ROOT="${OUTPUT_ROOT:-/home/yli7/scratch/datasets/dl3dv_960p/evaluation/da3_streaming}"
+OUTPUT_ROOT="${OUTPUT_ROOT:-/home/yli7/scratch2/datasets/dl3dv_960p/evaluation}"
 WORKERS="${WORKERS:-8}"
 START_IDX=0
 END_IDX=""
@@ -14,8 +14,10 @@ RUN_DIR=""
 
 usage() {
   cat <<'EOF'
+Step 03: analyze existing DL3DV eval outputs.
+
 Usage:
-  scripts/analyze_existing_dl3dv_eval.sh [options]
+  scripts/dl3dv_eval_03_analyze_existing.sh [options]
 
 Options:
   --python-bin PATH
@@ -28,8 +30,8 @@ Options:
   --run-dir PATH
 
 Examples:
-  scripts/analyze_existing_dl3dv_eval.sh
-  scripts/analyze_existing_dl3dv_eval.sh --start-idx 0 --end-idx 10 --workers 2
+  scripts/dl3dv_eval_03_analyze_existing.sh
+  scripts/dl3dv_eval_03_analyze_existing.sh --start-idx 0 --end-idx 10 --workers 2
 EOF
 }
 
@@ -143,7 +145,7 @@ run_one() {
     return
   fi
 
-  if "${PYTHON_BIN}" "${REPO_ROOT}/scripts/da3_streaming_dl3dv_eval.py" \
+  if "${PYTHON_BIN}" "${REPO_ROOT}/scripts/dl3dv_eval_02_streaming_inference.py" \
     --config "${CONFIG_PATH}" \
     --analyze-existing-scene "${scene_root}" > "${log_path}" 2>&1; then
     printf "%s\t%s\t%s\t%s\t%s\n" "${idx}" "${scene_id}" "${scene_root}" "ok" "${log_path}" > "${status_path}"

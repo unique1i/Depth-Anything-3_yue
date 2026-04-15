@@ -1,5 +1,26 @@
 #!/usr/bin/env python3
+"""Summarize existing DL3DV DA3 analysis outputs.
+
+Example configs:
+
+1. Original outdoor filtered split
+~/local/micromamba/envs/da3/bin/python scripts/dl3dv_summarize_analysis.py \
+  --data-root /home/yli7/scratch2/datasets/dl3dv_960p \
+  --split-file /home/yli7/scratch2/datasets/dl3dv_960p/metadata/dl3dv_outdoor_min200_filtered.txt \
+  --output-dir /home/yli7/repos/Depth-Anything-3/outputs/analyze_existing_dl3dv_all
+
+2. Evaluation 50-scene filtered split staged from tar archives into scene zips
+~/local/micromamba/envs/da3/bin/python scripts/dl3dv_summarize_analysis.py \
+  --data-root /home/yli7/scratch2/datasets/dl3dv_960p/evaluation \
+  --split-file /home/yli7/scratch2/datasets/dl3dv_960p/metadata/splits/dl3dv_evaluation_filtered.txt \
+  --output-dir /home/yli7/repos/Depth-Anything-3/outputs/analyze_existing_dl3dv_evaluation
+
+For evaluation scenes, `transforms_da3.json` is usually absent. The script will still summarize
+`diagnostics.json`; OBB-based columns stay empty in that case.
+"""
+
 from __future__ import annotations
+
 import argparse
 import csv
 import json
@@ -11,25 +32,6 @@ from typing import Iterable
 
 import numpy as np
 
-"""
-Example configs:
-
-1. Original outdoor filtered split
-~/local/micromamba/envs/da3/bin/python scripts/summarize_existing_dl3dv_analysis.py \
-  --data-root /home/yli7/scratch2/datasets/dl3dv_960p \
-  --split-file /home/yli7/scratch2/datasets/dl3dv_960p/metadata/dl3dv_outdoor_min200_filtered.txt \
-  --output-dir /home/yli7/repos/Depth-Anything-3/outputs/analyze_existing_dl3dv_all
-
-2. Evaluation 55-scene split
-~/local/micromamba/envs/da3/bin/python scripts/summarize_existing_dl3dv_analysis.py \
-  --data-root /home/yli7/scratch/datasets/dl3dv_960p/evaluation/da3_streaming \
-  --split-file /home/yli7/scratch2/datasets/dl3dv_960p/metadata/splits/dl3dv_evaluation_filtered.txt \
-  --output-dir /home/yli7/repos/Depth-Anything-3/outputs/analyze_existing_dl3dv_evaluation
-
-For evaluation scenes, `transforms_da3.json` is usually absent. The script will still summarize
-`diagnostics.json`; OBB-based columns stay empty in that case.
-"""
-
 
 DEFAULT_DATA_ROOT = Path("/home/yli7/scratch2/datasets/dl3dv_960p")
 DEFAULT_SPLIT_FILE = DEFAULT_DATA_ROOT / "metadata" / "dl3dv_outdoor_min200.txt"
@@ -37,8 +39,8 @@ DEFAULT_OUTPUT_DIR = Path("/home/yli7/repos/Depth-Anything-3/outputs/analyze_exi
 DEFAULT_FILTERED_SPLIT_PATH = DEFAULT_DATA_ROOT / "metadata" / "dl3dv_outdoor_min200_filtered.txt"
 DEFAULT_EXCLUDED_SCENES_TSV = DEFAULT_OUTPUT_DIR / "excluded_scenes_conservative_filter.tsv"
 DEFAULT_FILTER_SUMMARY_MD = DEFAULT_OUTPUT_DIR / "conservative_filter_summary.md"
-EVAL_DATA_ROOT = Path("/home/yli7/scratch/datasets/dl3dv_960p/evaluation/da3_streaming")
-EVAL_SPLIT_FILE = Path("/home/yli7/scratch2/datasets/dl3dv_960p/metadata/dl3dv_evaluation.txt")
+EVAL_DATA_ROOT = Path("/home/yli7/scratch2/datasets/dl3dv_960p/evaluation")
+EVAL_SPLIT_FILE = Path("/home/yli7/scratch2/datasets/dl3dv_960p/metadata/splits/dl3dv_evaluation_filtered.txt")
 EVAL_OUTPUT_DIR = Path("/home/yli7/repos/Depth-Anything-3/outputs/analyze_existing_dl3dv_evaluation")
 NUMERIC_OUTLIER_REASONS = {
     "points_da3_extent_outlier",
@@ -352,12 +354,12 @@ def main() -> int:
         epilog=(
             "Examples:\n"
             "  Outdoor filtered split:\n"
-            f"    ~/local/micromamba/envs/da3/bin/python scripts/summarize_existing_dl3dv_analysis.py "
+            f"    ~/local/micromamba/envs/da3/bin/python scripts/dl3dv_summarize_analysis.py "
             f"--data-root {DEFAULT_DATA_ROOT} "
             f"--split-file {DEFAULT_FILTERED_SPLIT_PATH} "
             f"--output-dir {DEFAULT_OUTPUT_DIR}\n\n"
-            "  Evaluation 55-scene split:\n"
-            f"    ~/local/micromamba/envs/da3/bin/python scripts/summarize_existing_dl3dv_analysis.py "
+            "  Evaluation 50-scene filtered split:\n"
+            f"    ~/local/micromamba/envs/da3/bin/python scripts/dl3dv_summarize_analysis.py "
             f"--data-root {EVAL_DATA_ROOT} "
             f"--split-file {EVAL_SPLIT_FILE} "
             f"--output-dir {EVAL_OUTPUT_DIR}"

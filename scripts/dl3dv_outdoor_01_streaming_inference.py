@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""DL3DV outdoor DA3-Streaming inference runner."""
+"""Step 01: run DL3DV outdoor DA3-Streaming inference."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ import torch
 
 ### single scene test command example:
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-~/local/micromamba/envs/da3/bin/python scripts/da3_streaming_dl3dv.py \
+~/local/micromamba/envs/da3/bin/python scripts/dl3dv_outdoor_01_streaming_inference.py \
   --config /home/yli7/repos/Depth-Anything-3/da3_streaming/configs/base_config.yaml \
   --data-root /home/yli7/scratch2/datasets/dl3dv_960p \
   --split-file /home/yli7/scratch2/datasets/dl3dv_960p/metadata/dl3dv_outdoor_min200.txt \
@@ -471,7 +471,7 @@ def _build_runtime_options(args: argparse.Namespace, scene_cfg: dict) -> dict:
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="DL3DV outdoor DA3-Streaming inference")
+    parser = argparse.ArgumentParser(description="Step 01: run DL3DV outdoor DA3-Streaming inference")
 
     parser.add_argument("--config", default=str(REPO_ROOT / "da3_streaming" / "configs" / "base_config.yaml"))
     parser.add_argument("--data-root", default=DEFAULT_DATA_ROOT)
@@ -770,7 +770,7 @@ def main() -> int:
     args = parser.parse_args()
     if not args.analyze_existing_scene and args.pose_condition and args.shared_intrinsics:
         raise ValueError(
-            "--shared-intrinsics requires --no-pose-condition in scripts/da3_streaming_dl3dv.py."
+            "--shared-intrinsics requires --no-pose-condition in scripts/dl3dv_outdoor_01_streaming_inference.py."
         )
 
     config_path = Path(args.config).expanduser().resolve()

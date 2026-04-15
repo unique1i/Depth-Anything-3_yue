@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""DL3DV evaluation-zip DA3-Streaming inference runner."""
+"""Step 02: run DL3DV evaluation-zip DA3-Streaming inference."""
 
 from __future__ import annotations
 
@@ -40,8 +40,8 @@ from loop_utils.config_utils import load_config  # noqa: E402
 from loop_utils.sim3utils import merge_ply_files, warmup_numba  # noqa: E402
 
 
-DEFAULT_ZIP_ROOT = "/home/yli7/scratch/datasets/dl3dv_960p/evaluation/images"
-DEFAULT_OUTPUT_ROOT = "/home/yli7/scratch/datasets/dl3dv_960p/evaluation/da3_streaming"
+DEFAULT_ZIP_ROOT = "/home/yli7/scratch2/datasets/dl3dv_960p/evaluation/images"
+DEFAULT_OUTPUT_ROOT = "/home/yli7/scratch2/datasets/dl3dv_960p/evaluation"
 DEFAULT_SPLIT_FILE = "/home/yli7/scratch2/datasets/dl3dv_960p/metadata/splits/dl3dv_evaluation_filtered.txt"
 DEFAULT_MODEL_ID = "depth-anything/DA3NESTED-GIANT-LARGE-1.1"
 
@@ -545,7 +545,7 @@ def _analyze_existing_scene(scene_root: Path) -> Path:
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="DL3DV evaluation-zip DA3-Streaming inference")
+    parser = argparse.ArgumentParser(description="Step 02: run DL3DV evaluation-zip DA3-Streaming inference")
 
     parser.add_argument("--config", default=str(REPO_ROOT / "da3_streaming" / "configs" / "base_config.yaml"))
     parser.add_argument("--zip-root", default=DEFAULT_ZIP_ROOT)

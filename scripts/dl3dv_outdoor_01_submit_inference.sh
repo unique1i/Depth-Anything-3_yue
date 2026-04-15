@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --output=logs/%A_%a.log
-#SBATCH --error=logs/%A_%a.log
+#SBATCH --output=logs/dl3dv_outdoor_01_infer_%A_%a.log
+#SBATCH --error=logs/dl3dv_outdoor_01_infer_%A_%a.log
 #SBATCH --nodes=1
 #SBATCH -p capacity
 #SBATCH --cpus-per-task=16
@@ -21,7 +21,7 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 PYTHON_BIN="/home/yli7/local/micromamba/envs/da3/bin/python"
 FUSE_PYTHON_BIN="${FUSE_PYTHON_BIN:-${PYTHON_BIN}}"
-INFER_SCRIPT="scripts/da3_streaming_dl3dv.py"
+INFER_SCRIPT="scripts/dl3dv_outdoor_01_streaming_inference.py"
 FUSE_SCRIPT="/home/yli7/scratch2/datasets/dataset_tools/dl3dv/fuse_da3_depth_maps.py"
 
 CONFIG_PATH="/home/yli7/repos/Depth-Anything-3/da3_streaming/configs/base_config.yaml"
@@ -69,6 +69,7 @@ if (( END_IDX > TOTAL_SCENES )); then
 fi
 
 echo "Running on host $(hostname)"
+echo "Workflow step: dl3dv_outdoor_01_submit_inference"
 echo "Starting time: $(date)"
 echo "Array task id: ${SLURM_ARRAY_TASK_ID}"
 echo "Total scenes: ${TOTAL_SCENES}"

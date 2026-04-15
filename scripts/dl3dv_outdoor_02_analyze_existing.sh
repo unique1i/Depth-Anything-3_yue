@@ -19,8 +19,10 @@ EXCLUDE_DEPTH_ABOVE_100=1
 
 usage() {
   cat <<'EOF'
+Step 02: analyze existing DL3DV outdoor outputs.
+
 Usage:
-  scripts/analyze_existing_dl3dv.sh [options]
+  scripts/dl3dv_outdoor_02_analyze_existing.sh [options]
 
 Options:
   --python-bin PATH
@@ -38,8 +40,8 @@ Options:
   --exclude-depth-above-100-for-points / --no-exclude-depth-above-100-for-points
 
 Examples:
-  scripts/analyze_existing_dl3dv.sh
-  scripts/analyze_existing_dl3dv.sh --start-idx 0 --end-idx 100
+  scripts/dl3dv_outdoor_02_analyze_existing.sh
+  scripts/dl3dv_outdoor_02_analyze_existing.sh --start-idx 0 --end-idx 100
 EOF
 }
 
@@ -140,7 +142,7 @@ run_one() {
   local status_path="${STATUS_DIR}/$(printf "%05d" "${idx}").tsv"
 
   local cmd=(
-    "${PYTHON_BIN}" "${REPO_ROOT}/scripts/da3_streaming_dl3dv.py"
+    "${PYTHON_BIN}" "${REPO_ROOT}/scripts/dl3dv_outdoor_01_streaming_inference.py"
     --config "${CONFIG_PATH}"
     --analyze-existing-scene "${scene_root}"
     --scene-output-subdir "${SCENE_OUTPUT_SUBDIR}"
